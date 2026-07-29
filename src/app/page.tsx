@@ -1,1 +1,5 @@
-export default function HomePage() { return <main><h1>라운지핏</h1></main>; }
+import Link from 'next/link';
+
+export default function HomePage() {
+  return <main><h1>라운지핏</h1><Link href="/login">로그인</Link></main>;
+}

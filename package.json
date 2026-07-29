@@ -21,7 +21,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "bcryptjs": "3.0.3",
     "drizzle-orm": "0.45.2",
