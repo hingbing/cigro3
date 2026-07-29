@@ -1,0 +1,1 @@
+import Link from 'next/link'; export default function ForbiddenPage(){return <main className="shell"><section className="card"><p className="badge">권한 안내</p><h1>접근 권한이 없습니다</h1><p>현재 계정으로는 이 페이지를 볼 수 없습니다.</p><Link href="/" className="secondary">홈으로 이동</Link></section></main>}
