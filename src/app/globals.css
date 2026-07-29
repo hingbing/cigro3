@@ -1,0 +1,5 @@
+:root { --touch-target: 44px; --background: #f7f5f1; --foreground: #24211d; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: system-ui, sans-serif; }
+button, a, input { min-height: var(--touch-target); }
+:focus-visible { outline: 3px solid #7657d6; outline-offset: 2px; }
