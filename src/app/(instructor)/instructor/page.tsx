@@ -1,0 +1,1 @@
+import { AppHeader } from '@/components/app-header'; export default function InstructorPage(){return <main className="shell"><AppHeader/><section className="card"><h1>강사 화면</h1><p>배정된 수업 정보가 없습니다.</p></section></main>}
