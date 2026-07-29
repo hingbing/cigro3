@@ -8,16 +8,11 @@ import { login } from '@/server/auth/login';
 import { setSessionCookie, type CookieStore } from '@/server/auth/session';
 import { getDb } from '@/server/db/client';
 import { users } from '@/server/db/schema';
+import { destinationFor } from '@/server/auth/destination';
 
 const loginForm = z.object({ phone: z.string().min(1), password: z.string().min(1) });
 
 export type LoginActionState = { error?: string };
-
-function destinationFor(role: 'HEAD_ADMIN' | 'BRANCH_ADMIN' | 'INSTRUCTOR' | 'MEMBER'): string {
-  if (role === 'MEMBER') return '/';
-  if (role === 'INSTRUCTOR') return '/instructor';
-  return '/admin';
-}
 
 export async function loginAction(_: LoginActionState, formData: FormData): Promise<LoginActionState> {
   const parsed = loginForm.safeParse({ phone: formData.get('phone'), password: formData.get('password') });
