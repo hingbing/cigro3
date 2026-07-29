@@ -10,64 +10,122 @@
 
 ## 구현 실행 전 필수 준비
 
-1. main에서 설계 명세와 두 계획 문서의 커밋을 확인한다.
+1.  main에서 설계 명세와 두 계획 문서의 커밋을 확인한다.
 
-   실행:
+    실행:
 
-       git switch main
-       git status --short
-       git log --oneline -- docs/superpowers/specs/2026-07-29-loungefit-design.md docs/superpowers/plans/2026-07-29-loungefit-mvp.md docs/superpowers/plans/2026-07-29-loungefit-post-mvp.md
+        git switch main
+        git status --short
+        git log --oneline -- docs/superpowers/specs/2026-07-29-loungefit-design.md docs/superpowers/plans/2026-07-29-loungefit-mvp.md docs/superpowers/plans/2026-07-29-loungefit-post-mvp.md
 
-   예상 결과: working tree가 비어 있고, 설계 명세와 구현 계획 커밋이 main history에 존재한다.
+    예상 결과: working tree가 비어 있고, 설계 명세와 구현 계획 커밋이 main history에 존재한다.
 
-2. .worktrees/가 Git에서 제외되는지 확인한다.
+2.  .worktrees/가 Git에서 제외되는지 확인한다.
 
-   실행:
+    실행:
 
-       rg -n "^\.worktrees/$" .gitignore
-       git check-ignore -q .worktrees
+        rg -n "^\.worktrees/$" .gitignore
+        git check-ignore -q .worktrees
 
-   예상 결과: 두 명령이 .worktrees/ ignore rule을 확인한다. 현재 문서 전용 저장소처럼 .gitignore가 아직 없거나 rule이 빠져 있으면 구현 시작 전에 main에서 .worktrees/ 한 줄만 추가하고 다음 준비 커밋을 만든다.
+    예상 결과: 두 명령이 .worktrees/ ignore rule을 확인한다. 현재 문서 전용 저장소처럼 .gitignore가 아직 없거나 rule이 빠져 있으면 구현 시작 전에 main에서 .worktrees/ 한 줄만 추가하고 다음 준비 커밋을 만든다.
 
-       git add .gitignore
-       git commit -m "chore: ignore local worktrees"
+        git add .gitignore
+        git commit -m "chore: ignore local worktrees"
 
-3. feature/loungefit-mvp branch와 worktree를 생성한다.
+3.  feature/loungefit-mvp branch와 worktree를 생성한다.
 
-   실행:
+    실행:
 
-       git worktree add .worktrees/loungefit-mvp -b feature/loungefit-mvp main
-       git worktree list
-       Set-Location .worktrees/loungefit-mvp
+        git worktree add .worktrees/loungefit-mvp -b feature/loungefit-mvp main
+        git worktree list
+        Set-Location .worktrees/loungefit-mvp
 
-   예상 결과: .worktrees/loungefit-mvp가 feature/loungefit-mvp를 가리키고 현재 위치가 해당 worktree다.
+    예상 결과: .worktrees/loungefit-mvp가 feature/loungefit-mvp를 가리키고 현재 위치가 해당 worktree다.
 
-4. worktree에서 의존성과 기준 검증을 준비한다.
+4.  worktree에서 의존성과 기준 검증을 준비한다.
 
-   실행:
+    실행:
 
-       Test-Path package-lock.json
-       git diff --check
-       git status --short
+        Test-Path package-lock.json
+        git diff --check
+        git status --short
 
-   예상 결과: 현재 저장소에는 아직 package-lock.json이 없으므로 첫 명령은 False이고, Git 검사는 깨끗하게 통과한다. 따라서 의존성 설치는 Task 1 Step 1에서 이 worktree 안에서 처음 실행한다. 이후 session부터 package-lock.json이 있으면 Task 시작 전에 다음 기준 명령을 실행한다.
+    예상 결과: 현재 저장소에는 아직 package-lock.json이 없으므로 첫 명령은 False이고, Git 검사는 깨끗하게 통과한다. 따라서 의존성 설치는 Task 1 Step 1에서 이 worktree 안에서 처음 실행한다. 이후 session부터 package-lock.json이 있으면 Task 시작 전에 다음 기준 명령을 실행한다.
 
-       npm ci
-       npm run typecheck
-       npm run lint
-       npm run test:unit
+        npm ci
+        npm run typecheck
+        npm run lint
+        npm run test:unit
 
-5. 실제 구현, 테스트 수정, dependency 설치, Task commit은 모두 .worktrees/loungefit-mvp에서만 수행한다. main에서는 구현 파일을 직접 수정하지 않는다.
+5.  실제 구현, 테스트 수정, dependency 설치, Task commit은 모두 .worktrees/loungefit-mvp에서만 수행한다. main에서는 구현 파일을 직접 수정하지 않는다.
 
 ## 실행 규칙
 
 - 한 번에 하나의 Task만 구현한다.
-- 각 Task의 실패 테스트를 먼저 실행해 RED가 예상 이유로 실패하는지 확인한다.
-- 최소 구현 후 GREEN을 확인하고, REFACTOR 후 대상 테스트와 회귀 검증을 다시 실행한다.
-- Task 완료 후 변경 파일, 실행한 명령, 테스트 수와 결과, commit hash를 사용자에게 보고한다.
-- 사용자가 해당 Task를 승인하기 전에는 다음 Task를 시작하지 않는다.
-- Task 도중 다른 Task 범위가 필요해지면 현재 Task를 멈추고 사용자 승인을 요청한다.
-- main merge와 push는 Task 25 제출 절차에서만 수행한다.
+- 각 Task는 계획서에 적힌 순서대로 수행한다.
+- 각 Task의 실패 테스트를 먼저 실행하고, RED가 예상한 이유로 실패하는지 확인한다.
+- 테스트 통과에 필요한 최소 구현 후 GREEN을 확인한다.
+- REFACTOR 후 대상 테스트와 필요한 회귀 테스트를 다시 실행한다.
+- 각 Task가 끝나면 변경 파일, 실행 명령, 테스트 결과, commit hash를 내부 작업 기록에 남긴다.
+- Task별 사용자 승인은 생략하고, 아래 실행 묶음이 끝났을 때만 결과를 종합 보고하고 사용자 승인을 받는다.
+- 한 묶음 안에서는 앞 Task가 테스트와 커밋까지 완료된 경우 다음 Task로 계속 진행한다.
+- 테스트 실패, 설계 충돌, 데이터 손실 위험, 다른 Task의 선행 구현 필요성이 발견되면 현재 작업을 멈추고 사용자에게 보고한다.
+- 계획에 없는 기능을 추가하거나 Task 범위를 확대하지 않는다.
+- Post-MVP Task 26~30은 실행하지 않는다.
+- main merge와 git push는 Task 25 제출 절차에서만 수행하며, 실행 전에 사용자 승인을 받는다.
+
+### 실행 묶음 1: Task 1~5
+
+- 애플리케이션 초기화
+- PostgreSQL 테스트 환경
+- 핵심 데이터베이스 스키마와 제약조건
+- 시간 및 이용권 선택 업무 규칙
+
+묶음 완료 후 다음을 보고한다.
+
+- 완료한 Task
+- 변경 파일
+- 커밋 목록과 hash
+- typecheck, lint, 단위 테스트, 통합 테스트 결과
+- 남은 오류와 다음 묶음 진행 가능 여부
+
+### 실행 묶음 2: Task 6~13
+
+- 로그인과 session
+- 관리자 초대와 비밀번호 재설정
+- 역할 및 지점 권한
+- 지점·직원·시간표·수업 발생 건 관리
+- 이용권 발급
+- 회원 14일 수업 조회
+
+일정이 부족한 경우 지점 관리자와 강사 전용 UI는 최소 범위로 제한하되,
+서버 권한 검사와 핵심 데이터 준비는 생략하지 않는다.
+
+### 실행 묶음 3: Task 14~22
+
+- 동시 요청에 안전한 예약과 이용권 차감
+- 회원 예약 화면
+- 대기 신청·취소
+- 자동 승급과 빈자리 제안
+- 제안 수락과 지연 만료 처리
+- 예약 취소와 이용권 복원
+- 휴강 처리
+- 앱 내부 알림
+
+이 묶음에서는 예약, 이용권, 대기 정합성을 가장 우선한다.
+시간이 부족하면 부가 UI를 줄이되 핵심 transaction과 관련 테스트는 생략하지 않는다.
+
+### 실행 묶음 4: Task 23~25
+
+- 전체 검증과 CI
+- Vercel 및 Neon 배포
+- README
+- GitHub 제출 준비
+- 보안 및 비밀값 검사
+- main merge와 push
+
+Task 23의 검증이나 Task 24의 배포가 실패하면 새 기능을 추가하지 않고
+해당 실패 해결에만 집중한다.
 
 ## 일정 부족 시 제출 최소 기준과 중단 기준
 
@@ -150,7 +208,7 @@
 **인터페이스:**
 
 - 입력: 없음.
-- 출력: npm scripts dev, build, start, typecheck, lint, test:unit, test:e2e, src alias @/*, rendering 가능한 App Router root.
+- 출력: npm scripts dev, build, start, typecheck, lint, test:unit, test:e2e, src alias @/\*, rendering 가능한 App Router root.
 
 - [ ] **Step 1: 프로젝트 toolchain 설치와 version 고정**
 
@@ -204,7 +262,7 @@ src/app/page.tsx에 main element와 이름이 라운지핏인 h1을 포함하는
 
 - [ ] **Step 6: Configuration name과 import REFACTOR**
 
-Test setup은 vitest.setup.ts에 유지하고 src import에는 @/*를 사용하며 package script는 중복 flag가 없는 direct wrapper로 정리한다.
+Test setup은 vitest.setup.ts에 유지하고 src import에는 @/\*를 사용하며 package script는 중복 flag가 없는 direct wrapper로 정리한다.
 
 - [ ] **Step 7: Task 검증**
 
@@ -234,7 +292,7 @@ Test setup은 vitest.setup.ts에 유지하고 src import에는 @/*를 사용하�
 - 생성: src/server/db/schema/identity.ts
 - 생성: src/server/db/schema/index.ts
 - 생성: drizzle/0000_identity.sql
-- 생성: drizzle/meta/_journal.json
+- 생성: drizzle/meta/\_journal.json
 - 생성: drizzle/meta/0000_snapshot.json
 - 생성: tests/integration/helpers/database.ts
 - 생성: tests/integration/db/identity-schema.test.ts
@@ -345,7 +403,7 @@ connection 생성과 역의존성 순서의 TRUNCATE 로직을 tests/integration
 - 생성: drizzle/meta/0001_snapshot.json
 - 생성: tests/integration/db/scheduling-pass-schema.test.ts
 - 수정: src/server/db/schema/index.ts
-- 수정: drizzle/meta/_journal.json
+- 수정: drizzle/meta/\_journal.json
 
 **인터페이스:**
 
@@ -434,7 +492,7 @@ table을 책임별 파일에 두고 src/server/db/schema/index.ts를 통해서�
 - 생성: drizzle/meta/0002_snapshot.json
 - 생성: tests/integration/db/booking-constraints.test.ts
 - 수정: src/server/db/schema/index.ts
-- 수정: drizzle/meta/_journal.json
+- 수정: drizzle/meta/\_journal.json
 
 **인터페이스:**
 

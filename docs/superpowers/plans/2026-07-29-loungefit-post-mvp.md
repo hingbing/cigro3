@@ -19,10 +19,70 @@
 ## 실행 규칙
 
 - 한 번에 하나의 Task만 구현한다.
-- 각 Task에서 RED 실패, GREEN 통과, REFACTOR 후 재검증을 실제 명령 출력으로 확인한다.
-- Task가 끝나면 변경 파일, 실행 명령, 테스트 수와 결과, 커밋 해시를 사용자에게 보고한다.
-- 사용자가 해당 Task를 승인하기 전에는 다음 Task를 시작하지 않는다.
-- Task 26–30의 실패는 Must-have 예약·이용권·대기 상태를 변경하거나 되돌리는 방식으로 해결하지 않는다.
+- 각 Task는 계획서에 적힌 순서대로 수행한다.
+- 각 Task의 실패 테스트를 먼저 실행하고, RED가 예상한 이유로 실패하는지 확인한다.
+- 테스트 통과에 필요한 최소 구현 후 GREEN을 확인한다.
+- REFACTOR 후 대상 테스트와 필요한 회귀 테스트를 다시 실행한다.
+- 각 Task가 끝나면 변경 파일, 실행 명령, 테스트 결과, commit hash를 내부 작업 기록에 남긴다.
+- Task별 사용자 승인은 생략하고, 아래 실행 묶음이 끝났을 때만 결과를 종합 보고하고 사용자 승인을 받는다.
+- 한 묶음 안에서는 앞 Task가 테스트와 커밋까지 완료된 경우 다음 Task로 계속 진행한다.
+- 테스트 실패, 설계 충돌, 데이터 손실 위험, 다른 Task의 선행 구현 필요성이 발견되면 현재 작업을 멈추고 사용자에게 보고한다.
+- 계획에 없는 기능을 추가하거나 Task 범위를 확대하지 않는다.
+- Post-MVP Task 26~30은 실행하지 않는다.
+- main merge와 git push는 Task 25 제출 절차에서만 수행하며, 실행 전에 사용자 승인을 받는다.
+
+### 실행 묶음 1: Task 1~5
+
+- 애플리케이션 초기화
+- PostgreSQL 테스트 환경
+- 핵심 데이터베이스 스키마와 제약조건
+- 시간 및 이용권 선택 업무 규칙
+
+묶음 완료 후 다음을 보고한다.
+
+- 완료한 Task
+- 변경 파일
+- 커밋 목록과 hash
+- typecheck, lint, 단위 테스트, 통합 테스트 결과
+- 남은 오류와 다음 묶음 진행 가능 여부
+
+### 실행 묶음 2: Task 6~13
+
+- 로그인과 session
+- 관리자 초대와 비밀번호 재설정
+- 역할 및 지점 권한
+- 지점·직원·시간표·수업 발생 건 관리
+- 이용권 발급
+- 회원 14일 수업 조회
+
+일정이 부족한 경우 지점 관리자와 강사 전용 UI는 최소 범위로 제한하되,
+서버 권한 검사와 핵심 데이터 준비는 생략하지 않는다.
+
+### 실행 묶음 3: Task 14~22
+
+- 동시 요청에 안전한 예약과 이용권 차감
+- 회원 예약 화면
+- 대기 신청·취소
+- 자동 승급과 빈자리 제안
+- 제안 수락과 지연 만료 처리
+- 예약 취소와 이용권 복원
+- 휴강 처리
+- 앱 내부 알림
+
+이 묶음에서는 예약, 이용권, 대기 정합성을 가장 우선한다.
+시간이 부족하면 부가 UI를 줄이되 핵심 transaction과 관련 테스트는 생략하지 않는다.
+
+### 실행 묶음 4: Task 23~25
+
+- 전체 검증과 CI
+- Vercel 및 Neon 배포
+- README
+- GitHub 제출 준비
+- 보안 및 비밀값 검사
+- main merge와 push
+
+Task 23의 검증이나 Task 24의 배포가 실패하면 새 기능을 추가하지 않고
+해당 실패 해결에만 집중한다.
 
 ## 전역 제약
 
@@ -106,8 +166,8 @@ user-agent 판별을 하나의 작은 client helper에 모으고, 실제 동작�
 
 - [ ] **Step 8: 커밋**
 
-    git add -- src/app/manifest.ts public/sw.js public/icons src/components/pwa "src/app/(member)/settings" src/app/layout.tsx tests/unit/pwa tests/e2e/pwa-install-guidance.spec.ts README.md
-    git commit -m "feat: add LoungeFit PWA shell"
+  git add -- src/app/manifest.ts public/sw.js public/icons src/components/pwa "src/app/(member)/settings" src/app/layout.tsx tests/unit/pwa tests/e2e/pwa-install-guidance.spec.ts README.md
+  git commit -m "feat: add LoungeFit PWA shell"
 
 ### Task 27: Web Push 구독과 즉시 발송 추가
 
@@ -127,7 +187,7 @@ user-agent 판별을 하나의 작은 client helper에 모으고, 실제 동작�
 - 생성: tests/unit/push/payload.test.ts
 - 생성: tests/unit/pwa/push-permission-control.test.tsx
 - 수정: src/server/db/schema/index.ts
-- 수정: drizzle/meta/_journal.json
+- 수정: drizzle/meta/\_journal.json
 - 수정: src/server/notifications/notification-service.ts
 - 수정: src/server/notifications/business-notifications.ts
 - 수정: public/sw.js
@@ -195,8 +255,8 @@ MockPushClient와 WebPushClient가 동일한 send(subscription, payload) 인터�
 
 - [ ] **Step 9: 커밋**
 
-    git add -- src/server/db/schema/push.ts drizzle/0003_web_push.sql drizzle/meta src/server/push "src/app/(member)/settings" src/components/pwa/push-permission-control.tsx src/server/notifications public/sw.js src/server/env.ts .env.example package.json package-lock.json tests/integration/push tests/unit/push tests/unit/pwa README.md
-    git commit -m "feat: add immediate web push delivery"
+  git add -- src/server/db/schema/push.ts drizzle/0003_web_push.sql drizzle/meta src/server/push "src/app/(member)/settings" src/components/pwa/push-permission-control.tsx src/server/notifications public/sw.js src/server/env.ts .env.example package.json package-lock.json tests/integration/push tests/unit/push tests/unit/pwa README.md
+  git commit -m "feat: add immediate web push delivery"
 
 ### Task 28: 읽기 전용 운영 보고서 추가
 
@@ -269,8 +329,8 @@ ReportFilter schema와 authorizedBranchIds helper를 하나씩 공유하되 서�
 
 - [ ] **Step 8: 커밋**
 
-    git add -- src/server/reporting "src/app/(admin)/admin/reports" src/components/admin/report-filters.tsx src/components/admin/report-tables.tsx "src/app/(admin)/admin/layout.tsx" tests/integration/reporting tests/unit/admin/report-tables.test.tsx README.md
-    git commit -m "feat: add operational reports"
+  git add -- src/server/reporting "src/app/(admin)/admin/reports" src/components/admin/report-filters.tsx src/components/admin/report-tables.tsx "src/app/(admin)/admin/layout.tsx" tests/integration/reporting tests/unit/admin/report-tables.test.tsx README.md
+  git commit -m "feat: add operational reports"
 
 ### Task 29: 보고서 결과 CSV 출력
 
@@ -334,8 +394,8 @@ MEMBER와 INSTRUCTOR는 403, BRANCH_ADMIN의 다른 branch export는 403, 유효
 
 - [ ] **Step 8: 커밋**
 
-    git add -- src/server/reporting/csv.ts src/app/api/admin/reports/export "src/app/(admin)/admin/reports/page.tsx" tests/unit/reporting tests/integration/reporting README.md
-    git commit -m "feat: export operational reports as csv"
+  git add -- src/server/reporting/csv.ts src/app/api/admin/reports/export "src/app/(admin)/admin/reports/page.tsx" tests/unit/reporting tests/integration/reporting README.md
+  git commit -m "feat: export operational reports as csv"
 
 ### Task 30: 선택적 고급 Push 재시도와 저빈도 유지보수 추가
 
@@ -351,7 +411,7 @@ MEMBER와 INSTRUCTOR는 403, BRANCH_ADMIN의 다른 branch export는 403, 유효
 - 생성: tests/integration/maintenance/maintenance-route.test.ts
 - 생성: tests/unit/deployment/cron-frequency.test.ts
 - 수정: src/server/db/schema/push.ts
-- 수정: drizzle/meta/_journal.json
+- 수정: drizzle/meta/\_journal.json
 - 수정: src/server/push/delivery-service.ts
 - 수정: src/server/env.ts
 - 수정: .env.example
@@ -449,8 +509,8 @@ Invocation별 batch size와 execution budget을 제한하고 count만 반환한�
 
 - [ ] **Step 9: 커밋**
 
-    git add drizzle/0004_push_retry.sql drizzle/meta src/server/db/schema/push.ts src/server/push src/server/maintenance src/app/api/cron/maintenance src/server/env.ts .env.example vercel.json tests/integration/push tests/integration/maintenance tests/unit/deployment README.md
-    git commit -m "feat: add optional push retry maintenance"
+  git add drizzle/0004_push_retry.sql drizzle/meta src/server/db/schema/push.ts src/server/push src/server/maintenance src/app/api/cron/maintenance src/server/env.ts .env.example vercel.json tests/integration/push tests/integration/maintenance tests/unit/deployment README.md
+  git commit -m "feat: add optional push retry maintenance"
 
 ## 최종 검증 순서
 
