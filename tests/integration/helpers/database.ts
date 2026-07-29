@@ -2,16 +2,23 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { resetDatabase } from '@/server/db/client';
 
-export function getPostgresErrorCode(error: unknown): string | undefined {
+export type PostgresConstraintCode = '23505' | '23514' | '23P01';
+
+function asConstraintCode(value: unknown): PostgresConstraintCode | undefined {
+  return value === '23505' || value === '23514' || value === '23P01' ? value : undefined;
+}
+
+export function getPostgresErrorCode(error: unknown): PostgresConstraintCode | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
 
   const directCode = (error as { code?: unknown }).code;
-  if (typeof directCode === 'string') return directCode;
+  const directConstraintCode = asConstraintCode(directCode);
+  if (directConstraintCode) return directConstraintCode;
 
   const cause = (error as { cause?: unknown }).cause;
   if (typeof cause === 'object' && cause !== null) {
     const causeCode = (cause as { code?: unknown }).code;
-    if (typeof causeCode === 'string') return causeCode;
+    return asConstraintCode(causeCode);
   }
 
   return undefined;
